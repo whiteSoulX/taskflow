@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { logout, isAuthenticated } from '@/lib/auth';
 import { LayoutDashboard, LogOut } from 'lucide-react';
+import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
   const router = useRouter();
@@ -27,6 +28,7 @@ export default function Navbar() {
               <Link href="/dashboard" className="text-slate-300 hover:text-white text-sm">
                 Dashboard
               </Link>
+              <NotificationBell />
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-1 text-sm text-slate-300 hover:text-red-400"

@@ -7,6 +7,15 @@ database setup, REST API, responsive UI).
 
 4 pages: Landing → Register → Login → Dashboard (protected, full CRUD).
 
+## Features
+- Full task CRUD — create, edit, mark complete/incomplete with a single click, delete.
+- **Deadline notifications** — a bell icon in the navbar badges overdue/due-soon tasks
+  and lists them in a dropdown; the dashboard also toasts a summary on load and shows
+  an inline banner while anything is overdue or due within 2 days.
+- Overdue and due-soon tasks are visually flagged on their cards (red/amber borders + labels).
+- Search, status/priority filters, and sorting (newest, due date, priority) on the dashboard.
+- JWT auth with automatic access-token refresh.
+
 ## Stack
 - **Frontend:** Next.js 14 (App Router), React, Tailwind CSS, Axios, lucide-react
 - **Backend:** Django 5, Django REST Framework, SimpleJWT, django-cors-headers
@@ -56,7 +65,7 @@ App runs at `http://localhost:3000`.
 | POST   | /api/auth/login/          | Get access + refresh JWT  |
 | POST   | /api/auth/refresh/        | Refresh access token      |
 | GET    | /api/auth/me/             | Current user              |
-| GET    | /api/tasks/               | List your tasks           |
+| GET    | /api/tasks/               | List your tasks (supports `?status=`, `?priority=`, `?search=`, `?ordering=due_date\|priority\|created_at`, prefix `-` to reverse) |
 | POST   | /api/tasks/               | Create a task             |
 | PUT    | /api/tasks/{id}/          | Update a task             |
 | DELETE | /api/tasks/{id}/          | Delete a task             |
