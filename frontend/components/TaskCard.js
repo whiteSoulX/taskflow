@@ -19,13 +19,24 @@ const urgencyBorder = {
   none: 'border-slate-800',
 };
 
-export default function TaskCard({ task, onEdit, onDelete, onToggleDone }) {
+export default function TaskCard({ task, onEdit, onDelete, onToggleDone, draggable = false }) {
   const urgency = getTaskUrgency(task);
   const isDone = task.status === 'done';
 
   return (
     <div
-      className={`bg-slate-900 border rounded-xl p-4 flex flex-col gap-2 ${urgencyBorder[urgency]}`}
+      draggable={draggable}
+      onDragStart={
+        draggable
+          ? (e) => {
+              e.dataTransfer.setData('text/plain', String(task.id));
+              e.dataTransfer.effectAllowed = 'move';
+            }
+          : undefined
+      }
+      className={`bg-slate-900 border rounded-xl p-4 flex flex-col gap-2 transition ${
+        urgencyBorder[urgency]
+      } ${draggable ? 'cursor-grab active:cursor-grabbing hover:border-slate-700' : ''}`}
     >
       <div className="flex justify-between items-start gap-2">
         <div className="flex items-start gap-2 min-w-0">

@@ -8,12 +8,16 @@ database setup, REST API, responsive UI).
 4 pages: Landing → Register → Login → Dashboard (protected, full CRUD).
 
 ## Features
-- Full task CRUD — create, edit, mark complete/incomplete with a single click, delete.
+- Full task CRUD — create, edit, mark complete/incomplete with a single click, delete
+  (behind a confirmation dialog so it isn't accidental).
+- **Kanban board** — a drag-and-drop To Do / In Progress / Done board alongside the
+  original grid view; toggle between them, saved per-browser.
 - **Deadline notifications** — a bell icon in the navbar badges overdue/due-soon tasks
   and lists them in a dropdown; the dashboard also toasts a summary on load and shows
   an inline banner while anything is overdue or due within 2 days.
 - Overdue and due-soon tasks are visually flagged on their cards (red/amber borders + labels).
 - Search, status/priority filters, and sorting (newest, due date, priority) on the dashboard.
+- Navbar greets the logged-in user by username, pulled from the API.
 - JWT auth with automatic access-token refresh.
 
 ## Stack
@@ -31,7 +35,8 @@ taskflow-portfolio/
 │   └── tasks/        Task model + CRUD API (per-user)
 └── frontend/         Next.js app
     ├── app/           pages: /, /login, /register, /dashboard
-    ├── components/    Navbar, TaskCard, TaskForm, StatsCard, ProtectedRoute
+    ├── components/    Navbar, TaskCard, TaskForm, KanbanBoard, StatsCard,
+    │                  NotificationBell, ConfirmDialog, ProtectedRoute
     └── lib/           api client + auth helpers
 ```
 

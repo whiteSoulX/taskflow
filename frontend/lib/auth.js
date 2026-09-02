@@ -26,3 +26,8 @@ export function isAuthenticated() {
   if (typeof window === 'undefined') return false;
   return !!localStorage.getItem('access_token');
 }
+
+export async function getMe() {
+  const { data } = await api.get('/auth/me/');
+  return data;
+}

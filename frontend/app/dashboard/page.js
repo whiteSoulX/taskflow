@@ -6,21 +6,44 @@ import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import StatsCard from '@/components/StatsCard';
 import TaskCard from '@/components/TaskCard';
+import TaskCardSkeleton from '@/components/TaskCardSkeleton';
 import TaskForm from '@/components/TaskForm';
+import KanbanBoard from '@/components/KanbanBoard';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import api from '@/lib/api';
 import { getNotifications } from '@/lib/notifications';
-import { Plus, Search, AlertTriangle } from 'lucide-react';
+import { Plus, Search, AlertTriangle, LayoutGrid, Columns3 } from 'lucide-react';
 
 function DashboardContent() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [taskPendingDelete, setTaskPendingDelete] = useState(null);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [sortBy, setSortBy] = useState('-created_at');
+  const [view, setView] = useState('grid');
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('taskflow_view');
+      if (saved === 'board' || saved === 'grid') setView(saved);
+    } catch (err) {
+      // ignore — localStorage can be unavailable (private mode, etc.)
+    }
+  }, []);
+
+  const changeView = (next) => {
+    setView(next);
+    try {
+      localStorage.setItem('taskflow_view', next);
+    } catch (err) {
+      // ignore
+    }
+  };
 
   const fetchTasks = async ({ notify } = {}) => {
     try {
@@ -72,13 +95,16 @@ function DashboardContent() {
     }
   };
 
-  const handleDelete = async (id) => {
+  const confirmDelete = async () => {
+    if (!taskPendingDelete) return;
     try {
-      await api.delete(`/tasks/${id}/`);
+      await api.delete(`/tasks/${taskPendingDelete.id}/`);
       toast.success('Task deleted');
       fetchTasks();
     } catch (err) {
       toast.error('Could not delete task');
+    } finally {
+      setTaskPendingDelete(null);
     }
   };
 
@@ -90,6 +116,17 @@ function DashboardContent() {
       fetchTasks();
     } catch (err) {
       toast.error('Could not update task');
+    }
+  };
+
+  const handleStatusChange = async (task, nextStatus) => {
+    try {
+      await api.put(`/tasks/${task.id}/`, { ...task, status: nextStatus });
+      const label = { todo: 'To Do', in_progress: 'In Progress', done: 'Done' }[nextStatus];
+      toast.success(`Moved to ${label}`);
+      fetchTasks();
+    } catch (err) {
+      toast.error('Could not move task');
     }
   };
 
@@ -136,7 +173,7 @@ function DashboardContent() {
     <>
       <Navbar />
       <main className="max-w-6xl mx-auto px-6 py-10">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
           <div>
             <h1 className="text-2xl font-bold text-white">Your Tasks</h1>
             <p className="text-slate-400 text-sm">Manage everything from one dashboard</p>
@@ -152,7 +189,7 @@ function DashboardContent() {
           </button>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <StatsCard label="Total Tasks" value={stats.total} accent="text-white" />
           <StatsCard label="In Progress" value={stats.inProgress} accent="text-amber-400" />
           <StatsCard label="Completed" value={stats.done} accent="text-emerald-400" />
@@ -168,14 +205,12 @@ function DashboardContent() {
                   {dueSoon.length > 0 ? ', ' : '.'}
                 </>
               )}
-              {dueSoon.length > 0 && (
-                <>{dueSoon.length} due within 2 days.</>
-              )}
+              {dueSoon.length > 0 && <>{dueSoon.length} due within 2 days.</>}
             </span>
           </div>
         )}
 
-        <div className="flex flex-wrap gap-3 mb-6">
+        <div className="flex flex-wrap gap-3 mb-6 items-center">
           <div className="relative flex-1 min-w-[200px]">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
             <input
@@ -214,18 +249,52 @@ function DashboardContent() {
             <option value="due_date">Due date</option>
             <option value="priority">Priority</option>
           </select>
+
+          <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-1 ml-auto">
+            <button
+              onClick={() => changeView('grid')}
+              title="Grid view"
+              className={`p-1.5 rounded-md transition ${
+                view === 'grid' ? 'bg-cyan-400 text-slate-900' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <LayoutGrid size={16} />
+            </button>
+            <button
+              onClick={() => changeView('board')}
+              title="Board view"
+              className={`p-1.5 rounded-md transition ${
+                view === 'board' ? 'bg-cyan-400 text-slate-900' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Columns3 size={16} />
+            </button>
+          </div>
         </div>
 
         {loading ? (
-          <p className="text-slate-400">Loading tasks...</p>
+          <div className="grid md:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <TaskCardSkeleton key={i} />
+            ))}
+          </div>
         ) : tasks.length === 0 ? (
           <div className="text-center py-20 text-slate-500">
             No tasks yet — create your first one.
           </div>
         ) : visibleTasks.length === 0 ? (
-          <div className="text-center py-20 text-slate-500">
-            No tasks match your filters.
-          </div>
+          <div className="text-center py-20 text-slate-500">No tasks match your filters.</div>
+        ) : view === 'board' ? (
+          <KanbanBoard
+            tasks={visibleTasks}
+            onEdit={(t) => {
+              setEditingTask(t);
+              setShowForm(true);
+            }}
+            onDelete={(id) => setTaskPendingDelete(tasks.find((t) => t.id === id))}
+            onToggleDone={handleToggleDone}
+            onStatusChange={handleStatusChange}
+          />
         ) : (
           <div className="grid md:grid-cols-3 gap-4">
             {visibleTasks.map((task) => (
@@ -236,7 +305,7 @@ function DashboardContent() {
                   setEditingTask(t);
                   setShowForm(true);
                 }}
-                onDelete={handleDelete}
+                onDelete={(id) => setTaskPendingDelete(tasks.find((t) => t.id === id))}
                 onToggleDone={handleToggleDone}
               />
             ))}
@@ -254,6 +323,19 @@ function DashboardContent() {
           }}
         />
       )}
+
+      <ConfirmDialog
+        open={!!taskPendingDelete}
+        title="Delete this task?"
+        message={
+          taskPendingDelete
+            ? `"${taskPendingDelete.title}" will be permanently deleted. This can't be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setTaskPendingDelete(null)}
+      />
     </>
   );
 }

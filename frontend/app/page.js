@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import { CheckCircle2, Rocket, ShieldCheck, LayoutDashboard } from 'lucide-react';
+import { CheckCircle2, Rocket, ShieldCheck, LayoutDashboard, BellRing } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -36,7 +36,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mt-20">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-20">
           <Feature
             icon={<ShieldCheck className="text-cyan-400" />}
             title="JWT Authentication"
@@ -44,8 +44,13 @@ export default function Home() {
           />
           <Feature
             icon={<LayoutDashboard className="text-cyan-400" />}
-            title="Live Dashboard"
-            text="A protected dashboard reading and writing directly to a Django REST API."
+            title="Kanban & Grid Views"
+            text="Drag and drop tasks between To Do, In Progress, and Done, or work from a filterable grid."
+          />
+          <Feature
+            icon={<BellRing className="text-cyan-400" />}
+            title="Deadline Reminders"
+            text="A live notification bell and dashboard alerts flag overdue and due-soon tasks automatically."
           />
           <Feature
             icon={<Rocket className="text-cyan-400" />}
@@ -59,11 +64,11 @@ export default function Home() {
           <ul className="grid md:grid-cols-2 gap-3 text-slate-300 text-sm">
             {[
               'Responsive Next.js UI with Tailwind CSS',
-              'Django REST Framework CRUD API',
+              'Django REST Framework CRUD API with search, filtering & sorting',
               'PostgreSQL-ready database layer',
               'JWT auth with automatic token refresh',
-              'Per-user data isolation & permissions',
-              'Docker + Vercel deployment config',
+              'Drag-and-drop kanban board with per-user data isolation',
+              'Deadline notifications and Docker + Vercel deployment config',
             ].map((item) => (
               <li key={item} className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />

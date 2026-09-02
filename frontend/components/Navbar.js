@@ -1,14 +1,30 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { logout, isAuthenticated } from '@/lib/auth';
+import { logout, isAuthenticated, getMe } from '@/lib/auth';
 import { LayoutDashboard, LogOut } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
   const router = useRouter();
   const authed = typeof window !== 'undefined' && isAuthenticated();
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    if (!authed) return;
+    let cancelled = false;
+    getMe()
+      .then((data) => {
+        if (!cancelled) setUsername(data.username);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authed]);
 
   const handleLogout = () => {
     logout();
@@ -25,6 +41,11 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           {authed ? (
             <>
+              {username && (
+                <span className="hidden sm:inline text-slate-400 text-sm">
+                  Hi, <span className="text-slate-200 font-medium">{username}</span>
+                </span>
+              )}
               <Link href="/dashboard" className="text-slate-300 hover:text-white text-sm">
                 Dashboard
               </Link>
